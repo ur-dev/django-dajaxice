@@ -39,6 +39,7 @@ import traceback
 from django.conf import settings
 from django.utils import simplejson
 from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 
 from dajaxice.core import dajaxice_functions
 from dajaxice.exceptions import FunctionNotCallableError, DajaxiceImportError
@@ -179,7 +180,8 @@ class DajaxiceRequest(object):
             try:
                 thefunction = self._get_ajax_function()
                 response = '%s' % thefunction(self.request, **argv)
-
+            except PermissionDenied:
+                raise PermissionDenied
             except Exception, e:
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 log.error(trace)
