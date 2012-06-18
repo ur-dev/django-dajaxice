@@ -163,6 +163,7 @@ class DajaxiceRequest(object):
         """
         if self._is_callable():
             log.debug('Function %s is callable' % self.full_name)
+            log.debug('request.POST: %s' % self.request.POST)
 
             argv = self.request.POST.get('argv')
             if argv != 'undefined':
@@ -191,7 +192,11 @@ class DajaxiceRequest(object):
                     self.notify_exception(self.request, sys.exc_info())
 
             log.info('response: %s' % response)
-            return HttpResponse(response, mimetype="application/x-json")
+            
+            if not isinstance(response, HttpResponse):
+                response = HttpResponse(str(response), mimetype="application/x-json")
+            return response
+            
 
         else:
             log.debug('Function %s is not callable' % self.full_name)
