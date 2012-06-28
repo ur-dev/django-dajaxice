@@ -35,6 +35,7 @@ import os
 import sys
 import logging
 import traceback
+import json
 
 from django.conf import settings
 from django.utils import simplejson
@@ -181,12 +182,16 @@ class DajaxiceRequest(object):
             try:
                 thefunction = self._get_ajax_function()
                 response = '%s' % thefunction(self.request, **argv)
-            except PermissionDenied:
-                raise PermissionDenied
-            except Exception, e:
+            except PermissionDenied as instance:
+                trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
+                log.warning(trace)
+                respDict = {'error': "You are not permitted to do that. This incident has been logged.", 'type': 'PermissionDenied'}
+                response = json.dumps(respDict)
+            except Exception as instance:
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 log.error(trace)
-                response = '%s' % DajaxiceRequest.get_exception_message()
+                respDict = {'error': instance.__str__(), 'type': instance.__name__}
+                response = json.dumps(respDict)
 
                 if DajaxiceRequest.get_notify_exceptions():
                     self.notify_exception(self.request, sys.exc_info())
@@ -195,6 +200,9 @@ class DajaxiceRequest(object):
             
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(str(response), mimetype="application/x-json")
+            else:
+                # not sure this actually happens any more
+                print 'already response'
             return response
             
 
