@@ -190,7 +190,9 @@ class DajaxiceRequest(object):
             except Exception as instance:
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 log.error(trace)
-                respDict = {'error': instance.__str__(), 'type': instance.__name__}
+                respDict = {'error': instance.__str__()}
+                if hasattr(instance, "__name__"):
+                    respDict['type'] = instance.__name__
                 response = json.dumps(respDict)
 
                 if DajaxiceRequest.get_notify_exceptions():
