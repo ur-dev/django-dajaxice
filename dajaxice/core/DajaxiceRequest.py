@@ -38,13 +38,14 @@ import traceback
 import json
 
 from django.conf import settings
-from django.utils import simplejson, sentry_exc
+from django.utils import simplejson
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import resolve
 
 from dajaxice.core import dajaxice_functions
 from dajaxice.exceptions import FunctionNotCallableError, DajaxiceImportError
+from dajaxice.utils import sentry_exc
 
 log = logging.getLogger(__name__)
 
