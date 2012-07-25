@@ -31,6 +31,9 @@
 #  DAMAGE.
 #----------------------------------------------------------------------
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def deserialize_form(data):
     """
@@ -48,3 +51,21 @@ def simple_import_module(name):
     import sys
     __import__(name)
     return sys.modules[name]
+
+
+def sentry_exc():
+    """
+    Attempt to send an exception to sentry.
+    
+    This is "soft coupled" in that it will gracefully fail if raven
+    is not installed.
+    """
+    try:
+        from raven.contrib.django.models import client
+        # send the exception to raven
+        client.captureException()
+    except:
+        logger.debug("raven is not installed, so we could not notify sentry of the exception.")
+        pass
+    
+

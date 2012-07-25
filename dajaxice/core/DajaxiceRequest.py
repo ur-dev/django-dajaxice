@@ -38,7 +38,7 @@ import traceback
 import json
 
 from django.conf import settings
-from django.utils import simplejson
+from django.utils import simplejson, sentry_exc
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import resolve
@@ -184,6 +184,8 @@ class DajaxiceRequest(object):
                 thefunction = self._get_ajax_function()
                 response = '%s' % thefunction(self.request, **argv)
             except PermissionDenied as instance:
+                sentry_exc()
+                
                 # the following is all to construct a meaningful log entry
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 host = "Host not available"
@@ -204,6 +206,8 @@ class DajaxiceRequest(object):
                 respDict = {'error': "You are not permitted to do that. This incident has been logged.", 'type': 'PermissionDenied'}
                 response = json.dumps(respDict)
             except Exception as instance:
+                sentry_exc()
+                
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 log.error(trace)
                 respDict = {'error': instance.__str__(), 'type': type(instance).__name__}
