@@ -13,7 +13,7 @@ except:
     except:
         from dajaxice.utils import simple_import_module as import_module
 
-log = logging.getLogger('dajaxice')
+log = logging.getLogger(__name__)
 
 
 class DajaxiceFunction(object):

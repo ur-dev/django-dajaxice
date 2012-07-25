@@ -41,7 +41,7 @@ from django.middleware.csrf import get_token
 
 register = template.Library()
 
-log = logging.getLogger('dajaxice')
+log = logging.getLogger(__name__)
 
 
 @register.inclusion_tag('dajaxice/dajaxice_js_import.html', takes_context=True)
