@@ -36,6 +36,7 @@ import sys
 import logging
 import traceback
 import json
+import pprint
 
 from django.conf import settings
 from django.utils import simplejson
@@ -166,7 +167,7 @@ class DajaxiceRequest(object):
         """
         if self._is_callable():
             log.debug('Function %s is callable' % self.full_name)
-            log.debug('request.POST: %s' % self.request.POST)
+            log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=4))
 
             argv = self.request.POST.get('argv')
             if argv != 'undefined':
@@ -179,7 +180,7 @@ class DajaxiceRequest(object):
             else:
                 argv = {}
 
-            log.debug('argv %s' % argv)
+            log.debug('argv %s' % pprint.pformat(argv, indent=4))
 
             try:
                 thefunction = self._get_ajax_function()
@@ -216,8 +217,9 @@ class DajaxiceRequest(object):
 
                 if DajaxiceRequest.get_notify_exceptions():
                     self.notify_exception(self.request, sys.exc_info())
-
-            log.info('response: %s' % response)
+            
+            # log a json deserialized pretty-printed version of what's happening here
+            log.debug('response: %s' % pprint.pformat(json.loads(response), indent=4))
             
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(str(response), mimetype="application/x-json")
