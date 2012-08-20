@@ -50,6 +50,8 @@ from dajaxice.utils import sentry_exc
 
 log = logging.getLogger(__name__)
 
+PPRINT_INDENT = 2
+
 # Python 2.7 has an importlib with import_module.
 # For older Pythons, Django's bundled copy provides it.
 # For older Django's dajaxice reduced_import_module.
@@ -167,7 +169,7 @@ class DajaxiceRequest(object):
         """
         if self._is_callable():
             log.debug('Function %s is callable' % self.full_name)
-            log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=4))
+            log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=PPRINT_INDENT))
 
             argv = self.request.POST.get('argv')
             if argv != 'undefined':
@@ -180,7 +182,7 @@ class DajaxiceRequest(object):
             else:
                 argv = {}
 
-            log.debug('argv %s' % pprint.pformat(argv, indent=4))
+            log.debug('argv %s' % pprint.pformat(argv, indent=PPRINT_INDENT))
 
             try:
                 thefunction = self._get_ajax_function()
@@ -219,7 +221,7 @@ class DajaxiceRequest(object):
                     self.notify_exception(self.request, sys.exc_info())
             
             # log a json deserialized pretty-printed version of what's happening here
-            log.debug('response: %s' % pprint.pformat(json.loads(response), indent=4))
+            log.debug('response: %s' % pprint.pformat(json.loads(response), indent=PPRINT_INDENT))
             
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(str(response), mimetype="application/x-json")
