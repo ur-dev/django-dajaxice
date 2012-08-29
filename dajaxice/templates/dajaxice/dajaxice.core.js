@@ -77,7 +77,11 @@ var Dajaxice = {
     },
 
     default_exception_callback: function(data){
-        alert('Something goes wrong');
+        {% if DEBUG %}
+            alert('Something goes wrong');
+        {% else %}
+            console.log("Something went wrong");
+        {% endif %}
     },
 
     valid_http_responses: function(){

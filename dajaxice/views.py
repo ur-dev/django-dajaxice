@@ -31,10 +31,11 @@
 #  DAMAGE.
 #----------------------------------------------------------------------
 
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.views.decorators.cache import cache_control
 
 from dajaxice.core import DajaxiceRequest
+import settings
 
 
 def dajaxice_request(request, call):
@@ -57,6 +58,8 @@ def js_core(request):
             'DAJAXICE_XMLHTTPREQUEST_JS_IMPORT': DajaxiceRequest.get_xmlhttprequest_js_import(),
             'DAJAXICE_JSON2_JS_IMPORT': DajaxiceRequest.get_json2_js_import(),
             'DAJAXICE_EXCEPTION': DajaxiceRequest.get_exception_message(),
-            'DAJAXICE_JS_DOCSTRINGS': DajaxiceRequest.get_js_docstrings()}
+            'DAJAXICE_JS_DOCSTRINGS': DajaxiceRequest.get_js_docstrings(),
+            'DEBUG': settings.DEBUG,
+            }
 
-    return render_to_response('dajaxice/dajaxice.core.js', data, mimetype="text/javascript")
+    return render(request, 'dajaxice/dajaxice.core.js', data, content_type="text/javascript")
