@@ -36,16 +36,21 @@ import sys
 import logging
 import traceback
 import json
+import pprint
 
 from django.conf import settings
 from django.utils import simplejson
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import resolve
 
 from dajaxice.core import dajaxice_functions
 from dajaxice.exceptions import FunctionNotCallableError, DajaxiceImportError
+from dajaxice.utils import sentry_exc
 
-log = logging.getLogger('dajaxice')
+log = logging.getLogger(__name__)
+
+PPRINT_INDENT = 2
 
 # Python 2.7 has an importlib with import_module.
 # For older Pythons, Django's bundled copy provides it.
@@ -164,7 +169,7 @@ class DajaxiceRequest(object):
         """
         if self._is_callable():
             log.debug('Function %s is callable' % self.full_name)
-            log.debug('request.POST: %s' % self.request.POST)
+            log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=PPRINT_INDENT))
 
             argv = self.request.POST.get('argv')
             if argv != 'undefined':
@@ -177,17 +182,36 @@ class DajaxiceRequest(object):
             else:
                 argv = {}
 
-            log.debug('argv %s' % argv)
+            log.debug('argv %s' % pprint.pformat(argv, indent=PPRINT_INDENT))
 
             try:
                 thefunction = self._get_ajax_function()
                 response = '%s' % thefunction(self.request, **argv)
             except PermissionDenied as instance:
+                sentry_exc()
+                
+                # the following is all to construct a meaningful log entry
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
-                log.warning(trace)
+                host = "Host not available"
+                try:
+                    # this is in try/except becuase it can fail if there are proxies
+                    host = self.request.get_host()
+                except:
+                    pass
+                # get the function we called when this happened
+                resolveMatch = resolve(self.request.path)
+                # set up a logger with the appropriate namespace for the *function* that caused this, not this file
+                modname = "%s.%s" % (resolveMatch.func.__module__, resolveMatch.func.__name__)
+                logger = logging.getLogger(modname)
+                # construct message and log
+                warningMsg = "PermissionDenied to %s (%s) for %s (%s)\n\n%s" % (self.request.user, host, modname, self.request.path, trace)
+                logger.warning(warningMsg)
+                
                 respDict = {'error': "You are not permitted to do that. This incident has been logged.", 'type': 'PermissionDenied'}
                 response = json.dumps(respDict)
             except Exception as instance:
+                sentry_exc()
+                
                 trace = '\n'.join(traceback.format_exception(*sys.exc_info()))
                 log.error(trace)
                 respDict = {'error': instance.__str__(), 'type': type(instance).__name__}
@@ -195,8 +219,9 @@ class DajaxiceRequest(object):
 
                 if DajaxiceRequest.get_notify_exceptions():
                     self.notify_exception(self.request, sys.exc_info())
-
-            log.info('response: %s' % response)
+            
+            # log a json deserialized pretty-printed version of what's happening here
+            log.debug('response: %s' % pprint.pformat(json.loads(response), indent=PPRINT_INDENT))
             
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(str(response), mimetype="application/x-json")
