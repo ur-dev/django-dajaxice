@@ -37,6 +37,7 @@ import logging
 import traceback
 import json
 import pprint
+import settings
 
 from django.conf import settings
 from django.utils import simplejson
@@ -111,7 +112,7 @@ class DajaxiceRequest(object):
 
     @staticmethod
     def get_cache_control():
-        if settings.DEBUG:
+        if settings.DAJAXICE_DEBUG:
             return 0
         return getattr(settings, 'DAJAXICE_CACHE_CONTROL', 5 * 24 * 60 * 60)
 
@@ -169,7 +170,8 @@ class DajaxiceRequest(object):
         """
         if self._is_callable():
             log.debug('Function %s is callable' % self.full_name)
-            log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=PPRINT_INDENT))
+            if settings.DAJAXICE_DEBUG:
+                log.debug('request.POST: %s' % pprint.pformat(self.request.POST, indent=PPRINT_INDENT))
 
             argv = self.request.POST.get('argv')
             if argv != 'undefined':
@@ -182,7 +184,8 @@ class DajaxiceRequest(object):
             else:
                 argv = {}
 
-            log.debug('argv %s' % pprint.pformat(argv, indent=PPRINT_INDENT))
+            if settings.DAJAXICE_DEBUG:
+                log.debug('argv %s' % pprint.pformat(argv, indent=PPRINT_INDENT))
 
             try:
                 thefunction = self._get_ajax_function()
@@ -221,7 +224,8 @@ class DajaxiceRequest(object):
                     self.notify_exception(self.request, sys.exc_info())
             
             # log a json deserialized pretty-printed version of what's happening here
-            log.debug('response: %s' % pprint.pformat(json.loads(response), indent=PPRINT_INDENT))
+            if settings.DAJAXICE_DEBUG:
+                log.debug('response: %s' % pprint.pformat(json.loads(response), indent=PPRINT_INDENT))
             
             if not isinstance(response, HttpResponse):
                 response = HttpResponse(str(response), mimetype="application/x-json")
